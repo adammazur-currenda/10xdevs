@@ -1,94 +1,74 @@
-# 10x Astro Starter
+# ITAuditor (MVP)
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+## Project Description
+
+ITAuditor is a minimal viable product aimed at automating and summarizing IT audit processes. It allows users to create, edit, and review audit orders. The application collects detailed audit protocols (ranging from 1000 to 10,000 characters) and leverages AI to generate a bullet-point summary, highlighting key findings efficiently. Users can edit the audit details before final approval, after which the audit transitions into a read-only mode. Additionally, the system provides basic user authentication to manage audit data.
 
 ## Tech Stack
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, Shadcn/ui
+- **Backend:** Supabase (PostgreSQL, authentication)
+- **AI Integration:** Openrouter.ai for generating audit summaries
+- **CI/CD & Hosting:** GitHub Actions & DigitalOcean
+- **Other:** Node.js (v22.14.0 as specified in .nvmrc)
 
-## Prerequisites
+## Getting Started Locally
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+### Prerequisites
 
-## Getting Started
+- Node.js v22.14.0
+- npm or yarn
+
+### Installation
 
 1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/your-repository.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd your-repository
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
+### Running the Development Server
 
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Run the development server:
+Start the Astro development server with:
 
 ```bash
 npm run dev
 ```
 
-4. Build for production:
-
-```bash
-npm run build
-```
+Then, open your browser and navigate to `http://localhost:3000` to view the project.
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+- `npm run dev` - Starts the development server.
+- `npm run build` - Builds the project for production.
+- `npm run preview` - Runs the production build locally.
+- `npm run astro` - Executes Astro CLI commands.
+- `npm run lint` - Lints the code using ESLint.
+- `npm run lint:fix` - Lints and automatically fixes issues.
+- `npm run format` - Formats the code using Prettier.
 
-## Project Structure
+## Project Scope
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
-```
+This MVP includes the following key features:
 
-## AI Development Support
+- **Audit Creation:** Users can create new audit orders by entering detailed audit protocols.
+- **Audit Editing:** Audits can be edited prior to final approval.
+- **AI-Powered Summaries:** Automatic generation of bullet-point audit summaries using integrated AI services.
+- **Read-Only Mode:** Audits become non-editable upon approval.
+- **User Authentication:** Basic login and registration functionalities to associate audits with user accounts.
+- **Audit Management:** Capabilities to list, view, and delete audits (where applicable).
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+## Project Status
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
-
-### Cursor IDE
-
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
-
-### GitHub Copilot
-
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
-
-### Windsurf
-
-The `.windsurfrules` file contains AI configuration for Windsurf.
-
-## Contributing
-
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
+This project is currently in the MVP stage and is under active development. It is designed to streamline IT audit processes and deliver immediate value through automation and a user-friendly interface.
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
