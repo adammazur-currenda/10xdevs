@@ -7,12 +7,13 @@ Aplikacja ITAuditor (MVP) ma na celu automatyzację procesu podsumowania audytu 
 Przeprowadzenie audytu IT wiąże się z ręcznym wpisywaniem obszernych, szczegółowych protokołów (od 1000 do 10 000 znaków), co jest czasochłonne i podatne na błędy. Weryfikacja i analiza tak rozbudowanych protokołów wymaga dużego nakładu pracy. Użytkownik potrzebuje mechanizmu, który automatycznie skróci i wyróżni kluczowe informacje, umożliwiając szybką ocenę poprawności i kompletności przeprowadzonego audytu.
 
 ## 3. Wymagania funkcjonalne
+- Wprowadzanie unikalnego numeru zlecenia audytu o długości od 2 do 20 znaków.
 - Wprowadzanie tekstowego protokołu audytu o długości od 1000 do 10 000 znaków.
-- Automatyczna, synchroniczna generacja wypunktowanego podsumowania audytu przy użyciu modułu AI.
+- Na żądanie, synchroniczna generacja wypunktowanego podsumowania audytu przy użyciu modułu AI.
 - Edytowalność protokołu oraz generowanego podsumowania przed zatwierdzeniem audytu.
 - Przejście do trybu tylko do odczytu po zatwierdzeniu audytu (poprzez przycisk "Akceptuję rezultat audytu").
 - Możliwość dodawania, edycji (dla niezatwierdzonych audytów) oraz usuwania zleceń audytów.
-- Rejestrowanie kluczowych metadanych: unikalny 20-znakowy identyfikator audytu, opis audytu, protokół, podsumowanie, status akceptacji, data utworzenia, data modyfikacji oraz identyfikator użytkownika.
+- Rejestrowanie kluczowych metadanych: unikalny numer/oznaczenie audytu, opis audytu, protokół, podsumowanie, status akceptacji, data utworzenia, data modyfikacji oraz identyfikator użytkownika.
 - Podstawowy system kont użytkowników umożliwiający logowanie, rejestrację oraz przyporządkowanie audytów do zalogowanego użytkownika.
 
 ## 4. Granice produktu
@@ -29,7 +30,8 @@ Przeprowadzenie audytu IT wiąże się z ręcznym wpisywaniem obszernych, szczeg
 - Opis: Użytkownik rozpoczyna proces dodania audytu za pomocą przycisku "Dodaj". Następnie wprowadza szczegółowy protokół audytu, po czym system na żądanie (przycisk "Generuj podsumowanie") generuje wypunktowane podsumowanie przy użyciu AI. Użytkownik może edytować obie sekcje przed finalnym zatwierdzeniem.
 - Kryteria akceptacji:
   - Przycisk "Dodaj" jest widoczny na ekranie głównym.
-  - Po kliknięciu przycisku uruchamia się interfejs nowego audytu z edytowalnym protokołem i podsumowaniem.
+  - Po kliknięciu przycisku uruchamia się interfejs nowego audytu z unikalnym numerem zlecenia audytu, opisem, edytowalnym protokołem i podsumowaniem.
+  - Unikalny numer zlecenia audytu musi mieścić się w zakresie 2–20 znaków.
   - Protokół musi mieścić się w zakresie 1000–10 000 znaków.
   - Podsumowanie jest generowane synchronicznie po wprowadzeniu protokołu.
   - Użytkownik może dokonać edycji przed zatwierdzeniem audytu.
@@ -39,6 +41,7 @@ Przeprowadzenie audytu IT wiąże się z ręcznym wpisywaniem obszernych, szczeg
 - Tytuł: Edycja zawartości audytu
 - Opis: Użytkownik ma możliwość edycji protokołu oraz wygenerowanego podsumowania przed zatwierdzeniem audytu, aby wprowadzić niezbędne poprawki.
 - Kryteria akceptacji:
+  - Pole numeru zlecenia jest nieedytowalne.
   - Pola edycji dla protokołu i podsumowania są dostępne, dopóki audyt nie został zatwierdzony.
   - Wprowadzone zmiany są zapisywane i widoczne przy kolejnych edycjach.
 
@@ -62,10 +65,10 @@ Przeprowadzenie audytu IT wiąże się z ręcznym wpisywaniem obszernych, szczeg
 ### US-005: Przeglądanie audytów
 - ID: US-005
 - Tytuł: Lista audytów
-- Opis: Użytkownik może przeglądać listę wszystkich dodanych audytów, gdzie widoczne są podstawowe informacje takie jak identyfikator, opis, data utworzenia oraz status audytu.
+- Opis: Użytkownik może przeglądać listę wszystkich dodanych audytów, gdzie widoczne są podstawowe informacje takie jak unikalne oznaczenie audytu, opis, data utworzenia oraz status audytu.
 - Kryteria akceptacji:
   - Lista audytów jest dostępna na stronie głównej.
-  - Każdy audyt wyświetla unikalny identyfikator, opis, datę utworzenia i status zatwierdzenia.
+  - Każdy audyt wyświetla unikalny numer/oznaczenie audytu, opis, datę utworzenia i status zatwierdzenia.
   - Edycja audytu uruchamiana poprzez zaznaczenie pozycji na liście i naciśnięciu przycisku edycji.
 
 ### US-006: Usuwanie audytu
