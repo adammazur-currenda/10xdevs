@@ -1,0 +1,13 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { CreateAuditForm } from '@/components/CreateAuditForm';
+---
+
+<Layout title="Create New Audit">
+  <main class="container mx-auto py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold mb-8">Create New Audit</h1>
+      <CreateAuditForm client:load />
+    </div>
+  </main>
+</Layout> 

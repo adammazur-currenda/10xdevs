@@ -1,0 +1,106 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Typography from '../components/Typography';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import Card from '../components/Card';
+import List from '../components/List';
+import Feedback from '../components/Feedback';
+import Navigation from '../components/Navigation';
+import ModalDemo from '../components/ModalDemo';
+import Textarea from '../components/Textarea';
+import Table from '../components/Table';
+---
+
+<Layout title="Kitchen Sink Demo">
+  <main class="p-8 space-y-12">
+    <Typography variant="h1">Kitchen Sink Demo</Typography>
+
+    <section>
+      <Typography variant="h2">Buttons</Typography>
+      <div class="space-x-4 mt-4">
+        <Button client:load variant="primary">Primary Button</Button>
+        <Button client:load variant="secondary">Secondary Button</Button>
+        <Button client:load variant="ghost">Ghost Button</Button>
+      </div>
+    </section>
+
+    <section>
+      <Typography variant="h2">Inputs</Typography>
+      <div class="space-y-4 max-w-md">
+        <Input client:load label="Username" placeholder="Enter your name" />
+        <Input client:load label="Email" type="email" placeholder="Enter your email" error="Invalid email" />
+      </div>
+    </section>
+
+    <section>
+      <Typography variant="h2">Card</Typography>
+      <Card client:load
+        header="Card Header"
+        footer="Card Footer"
+      >
+        <p>This is some card content.</p>
+      </Card>
+    </section>
+
+    <section>
+      <Typography variant="h2">List</Typography>
+      <List client:load items={[
+        'First item in the list',
+        'Second item in the list',
+        'Third item in the list'
+      ]} />
+    </section>
+
+    <section>
+      <Typography variant="h2">Navigation</Typography>
+      <Navigation client:load
+        items={[
+          { label: 'Home', href: '/', active: true },
+          { label: 'About', href: '/about' },
+          { label: 'Contact', href: '/contact' }
+        ]}
+      />
+    </section>
+
+    <section>
+      <Typography variant="h2">Textarea</Typography>
+      <Textarea client:load placeholder="Wpisz swoje notatki..." />
+    </section>
+
+    <section>
+      <Typography variant="h2">Table</Typography>
+      <Table client:load
+        columns={['Nazwa', 'Wiek', 'Email']}
+        data={[
+          ['Jan Kowalski', 35, 'jan@example.com'],
+          ['Anna Nowak', 28, 'anna@example.com'],
+          ['Piotr Zalewski', 40, 'piotr@example.com']
+        ]}
+      />
+    </section>
+
+    <section>
+      <Typography variant="h2">Feedback Messages</Typography>
+      <div class="space-y-4">
+        <Feedback client:load variant="success" dismissible={true}>
+          This is a success message that can be dismissed
+        </Feedback>
+        <Feedback client:load variant="error">
+          This is an error message
+        </Feedback>
+        <Feedback client:load variant="warning">
+          This is a warning message
+        </Feedback>
+        <Feedback client:load variant="info">
+          This is an info message
+        </Feedback>
+      </div>
+    </section>
+
+    <section>
+      <Typography variant="h2">Modal Dialog</Typography>
+      <ModalDemo client:load />
+    </section>
+  </main>
+</Layout> 
