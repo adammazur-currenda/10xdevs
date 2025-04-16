@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createAuditSchema } from "../../lib/schemas/audit.schema";
-import { AuditService } from "../../lib/services/audit.service";
+import { AuditService } from "../../lib/services/audit.new.service";
 import { DEFAULT_USER_ID, supabaseClient } from "../../db/supabase.client";
 
 export const prerender = false;

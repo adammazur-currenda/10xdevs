@@ -113,7 +113,7 @@ export function CreateAuditForm() {
 
     setFormState((prev) => ({ ...prev, isSaving: true, feedback: undefined }));
     try {
-      const response = await fetch("/api/audits", {
+      const response = await fetch("/api/audits.new", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
