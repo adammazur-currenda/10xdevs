@@ -80,3 +80,17 @@ export interface ApproveAuditCommand {
  * No payload is required for this action.
  */
 export interface DeleteAuditCommand {}
+
+/**
+ * ViewModel for displaying audit items in the list view.
+ * Transforms AuditDTO into a format optimized for UI display.
+ */
+export interface AuditListItemViewModel {
+  id: string;
+  auditOrderNumber: string;
+  description: string | null;
+  createdAt: string;
+  statusDisplay: string;
+  statusVariant: "default" | "secondary" | "destructive" | "outline";
+  isApproved: boolean;
+}

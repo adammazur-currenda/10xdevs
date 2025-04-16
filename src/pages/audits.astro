@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { AuditsDashboard } from '../components/AuditsDashboard';
+---
+
+<Layout title="Lista Audytów">
+  <main class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-6">Lista Audytów</h1>
+    <AuditsDashboard client:load />
+  </main>
+</Layout> 

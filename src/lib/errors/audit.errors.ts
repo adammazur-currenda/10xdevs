@@ -5,12 +5,29 @@ export class AuditError extends Error {
   }
 }
 
-export class AuditCreationError extends AuditError {
+export class AuditCreationError extends Error {
   constructor(
     message: string,
     public readonly cause?: unknown
   ) {
     super(message);
     this.name = "AuditCreationError";
+  }
+}
+
+export class AuditListError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = "AuditListError";
+  }
+}
+
+export class InvalidSortingError extends AuditListError {
+  constructor(column: string) {
+    super(`Invalid sorting column: ${column}`);
+    this.name = "InvalidSortingError";
   }
 }
