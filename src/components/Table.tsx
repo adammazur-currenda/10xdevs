@@ -87,7 +87,7 @@ const Table: React.FC<TableProps> = ({
             ) : (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-4 text-center text-gray-500">
-                  Brak danych do wyświetlenia
+                  No data to display
                 </td>
               </tr>
             )}
@@ -98,7 +98,7 @@ const Table: React.FC<TableProps> = ({
       {pagination && (
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Wyników na stronie:</span>
+            <span className="text-sm text-gray-700">Results per page:</span>
             <select
               value={pagination.limit}
               onChange={handleLimitChange}
@@ -116,17 +116,17 @@ const Table: React.FC<TableProps> = ({
               disabled={pagination.page <= 1}
               className="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Poprzednia
+              Previous
             </button>
             <span className="text-sm text-gray-700">
-              Strona {pagination.page} z {Math.ceil(pagination.total / pagination.limit)}
+              Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit)}
             </span>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
               className="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Następna
+              Next
             </button>
           </div>
         </div>

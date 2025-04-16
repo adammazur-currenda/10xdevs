@@ -62,7 +62,8 @@ export function AuditsDashboard() {
   }, []);
 
   // Transform data for Table component
-  const tableColumns = ["Numer zlecenia", "Opis", "Data utworzenia", "Status", "Akcje"];
+  const tableColumns = ["Order Number", "Description", "Created At", "Status", "Actions"];
+  const sortableColumns = [0, 2]; // Only "Order Number" (0) and "Created At" (2) are sortable
   const tableData = audits.map((audit) => [
     audit.auditOrderNumber,
     audit.description || "-",
@@ -70,20 +71,29 @@ export function AuditsDashboard() {
     audit.statusDisplay,
     <div key={audit.id} className="flex gap-2">
       <Button onClick={() => handleEdit(audit.id)} disabled={audit.isApproved} variant="secondary">
-        Edytuj
+        Edit
       </Button>
       <Button onClick={() => handleDelete(audit)} disabled={audit.isApproved} variant="ghost">
-        Usuń
+        Delete
       </Button>
     </div>,
   ]);
+
+  const handleTableSort = useCallback(
+    (columnIndex: number) => {
+      if (sortableColumns.includes(columnIndex)) {
+        handleSort(columnIndex);
+      }
+    },
+    [handleSort]
+  );
 
   if (error) {
     return (
       <Feedback variant="error" dismissible>
         <div>
-          <strong>Błąd</strong>
-          <p>Wystąpił błąd podczas pobierania listy audytów</p>
+          <strong>Error</strong>
+          <p>An error occurred while fetching the audit list</p>
         </div>
       </Feedback>
     );
@@ -98,15 +108,10 @@ export function AuditsDashboard() {
           </div>
         </Feedback>
       )}
-      
+
       <div className="flex justify-between items-center">
-        <Input
-          type="text"
-          placeholder="Filtruj po numerze zlecenia..."
-          onChange={handleFilterChange}
-          className="max-w-sm"
-        />
-        <Button onClick={handleAddAudit}>Dodaj Audyt</Button>
+        <Input type="text" placeholder="Filter by order number..." onChange={handleFilterChange} className="max-w-sm" />
+        <Button onClick={handleAddAudit}>Add Audit</Button>
       </div>
 
       <Table
@@ -115,7 +120,7 @@ export function AuditsDashboard() {
         pagination={pagination}
         onPageChange={setPage}
         onLimitChange={setLimit}
-        onSort={handleSort}
+        onSort={handleTableSort}
         sortColumn={sortColumn ?? undefined}
         sortDirection={sortDirection ?? undefined}
         className={isLoading ? "opacity-50" : ""}
@@ -124,13 +129,13 @@ export function AuditsDashboard() {
       {auditToDelete && (
         <Modal isOpen={true} onClose={() => setAuditToDelete(null)}>
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Potwierdzenie usunięcia</h3>
-            <p>Czy na pewno chcesz usunąć audyt o numerze {auditToDelete.orderNumber}?</p>
+            <h3 className="text-lg font-medium">Delete Confirmation</h3>
+            <p>Are you sure you want to delete audit with order number {auditToDelete.orderNumber}?</p>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setAuditToDelete(null)}>
-                Anuluj
+                Cancel
               </Button>
-              <Button onClick={handleConfirmDelete}>Usuń</Button>
+              <Button onClick={handleConfirmDelete}>Delete</Button>
             </div>
           </div>
         </Modal>
