@@ -8,16 +8,16 @@ interface ListAuditsOptions {
   page: number;
   limit: number;
   sort?: string;
+  filter?: string;
 }
 
-const ALLOWED_SORT_COLUMNS = ["created_at", "audit_order_number"] as const;
-type AllowedSortColumn = (typeof ALLOWED_SORT_COLUMNS)[number];
+const ALLOWED_SORT_COLUMNS = ["created_at", "audit_order_number"];
 
 export class AuditService {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  private validateSortColumn(column: string): asserts column is AllowedSortColumn {
-    if (!ALLOWED_SORT_COLUMNS.includes(column as AllowedSortColumn)) {
+  private validateSortColumn(column: string) {
+    if (!ALLOWED_SORT_COLUMNS.includes(column)) {
       throw new InvalidSortingError(column);
     }
   }
@@ -62,15 +62,19 @@ export class AuditService {
     try {
       console.log("[AuditService] Listing audits", { userId, options });
 
-      const { page, limit, sort } = options;
+      const { page, limit, sort, filter } = options;
       const offset = (page - 1) * limit;
 
       // Build query
-      let query = supabase
-        .from("audits")
-        .select("*", { count: "exact" })
-        .eq("user_id", userId)
-        .range(offset, offset + limit - 1);
+      let query = supabase.from("audits").select("*", { count: "exact" }).eq("user_id", userId);
+
+      // Apply filter if provided
+      if (filter) {
+        query = query.or(`audit_order_number.ilike.%${filter}%,description.ilike.%${filter}%`);
+      }
+
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1);
 
       // Apply sorting if specified
       if (sort) {

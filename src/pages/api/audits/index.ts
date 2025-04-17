@@ -14,6 +14,10 @@ const queryParamsSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().min(1).max(100).default(10),
   sort: z.enum(["created_at", "-created_at", "audit_order_number", "-audit_order_number"]).optional(),
+  filter: z
+    .string()
+    .nullish()
+    .transform((val) => val || undefined),
 });
 
 export const prerender = false;
@@ -28,6 +32,7 @@ export const GET: APIRoute = async ({ request }) => {
       page: url.searchParams.get("page"),
       limit: url.searchParams.get("limit"),
       sort: url.searchParams.get("sort"),
+      filter: url.searchParams.get("filter"),
     });
 
     if (!queryResult.success) {
@@ -44,14 +49,15 @@ export const GET: APIRoute = async ({ request }) => {
       );
     }
 
-    const { page, limit, sort } = queryResult.data;
-    console.log("[GET /audits] Validated parameters", { page, limit, sort });
+    const { page, limit, sort, filter } = queryResult.data;
+    console.log("[GET /audits] Validated parameters", { page, limit, sort, filter });
 
     // Get audits from service layer using default user ID
     const response: ListAuditsResponseDTO = await auditService.listAudits(supabaseClient, DEFAULT_USER_ID, {
       page,
       limit,
       sort,
+      filter,
     });
 
     return new Response(JSON.stringify(response), {
