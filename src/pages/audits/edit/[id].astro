@@ -1,0 +1,52 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { type AuditDTO } from '@/types';
+import EditAuditForm from '@/components/EditAuditForm';
+
+// Get the audit ID from URL params
+const { id } = Astro.params;
+
+// Validate UUID format
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+if (!id || !UUID_REGEX.test(id)) {
+  return Astro.redirect('/404');
+}
+
+// Fetch audit data
+let audit: AuditDTO | null = null;
+let error: string | null = null;
+
+try {
+  // Use Astro.url to get the base URL and construct the full API URL
+  const apiUrl = new URL('/api/audits/' + id, Astro.url.origin);
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return Astro.redirect('/404');
+    }
+    const errorData = await response.json();
+    throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+  }
+  
+  audit = await response.json();
+} catch (e) {
+  console.error('Error fetching audit:', e);
+  error = e instanceof Error ? e.message : 'An unexpected error occurred';
+}
+---
+
+<Layout>
+  <div class="container mx-auto px-4 py-8">
+    {error && (
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">Error: </strong>
+        <span class="block sm:inline">{error}</span>
+      </div>
+    )}
+    
+    {audit && (
+      <EditAuditForm client:load initialData={audit} />
+    )}
+  </div>
+</Layout>

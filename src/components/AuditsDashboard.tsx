@@ -36,8 +36,10 @@ export function AuditsDashboard() {
   );
 
   const handleEdit = useCallback((auditId: string) => {
-    const url = `/audits/${auditId}/edit`;
-    window.location.href = url;
+    const url = `/audits/edit/${auditId}`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.click();
   }, []);
 
   const handleDelete = useCallback((audit: AuditListItemViewModel) => {
