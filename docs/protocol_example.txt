@@ -1,0 +1,24 @@
+Data przeglądu: 2025-04-15
+Miejsce przeglądu: Centrum Danych – Główna Serwerownia
+Zespół audytowy: Zespół IT i Bezpieczeństwa (3 osoby)
+
+1. Serwery fizyczne
+W trakcie przeglądu stwierdzono, że część serwerów fizycznych (3 z 12) działa na przestarzałym sprzęcie (ponad 7 lat eksploatacji), co wiąże się z ryzykiem awarii oraz brakiem wsparcia producenta. Dodatkowo dwa serwery nie posiadają aktywnego monitoringu temperatury i zasilania.
+
+2. Maszyny wirtualne
+Zidentyfikowano łącznie 37 maszyn wirtualnych, z czego 9 działa w sposób nieefektywny – wykazują nadmiar przydzielonych zasobów (CPU/RAM) w stosunku do wykorzystania. W jednej instancji zainstalowano nieaktualną wersję systemu operacyjnego (Windows Server 2012 R2), co stanowi ryzyko bezpieczeństwa.
+
+3. Serwery aplikacyjne
+Na dwóch serwerach aplikacyjnych wykryto niespójność wersji bibliotek Java oraz brak odpowiednich certyfikatów SSL. Jedna z aplikacji hostowana lokalnie wykazuje problemy z obsługą TLS 1.2, co uniemożliwia komunikację z niektórymi systemami zewnętrznymi.
+
+4. Bazy danych
+W środowisku działają cztery instancje baz danych (3 x MS SQL Server, 1 x PostgreSQL). W jednej z baz danych nie działa regularna archiwizacja logów transakcyjnych, co może skutkować utratą danych w przypadku awarii. Dodatkowo brak zastosowania szyfrowania danych na poziomie bazy.
+
+5. Patch management
+System zarządzania poprawkami (WSUS) nie obejmuje wszystkich maszyn – 6 urządzeń nie było aktualizowanych od ponad 60 dni. Brakuje procedury testowania aktualizacji krytycznych przed wdrożeniem w środowisku produkcyjnym.
+
+6. Podatności
+Z wykorzystaniem skanera podatności wykryto 14 aktywnych luk, z czego 5 sklasyfikowano jako krytyczne (CVE z wynikiem CVSS ≥ 8.0). Dotyczą one m.in. przestarzałych wersji Apache, OpenSSL oraz brakujących poprawek bezpieczeństwa systemów operacyjnych.
+
+Wnioski końcowe:
+Zaleca się niezwłoczne opracowanie planu modernizacji serwerów fizycznych, optymalizację środowiska wirtualnego, wdrożenie jednolitego zarządzania poprawkami oraz usunięcie wykrytych podatności. Rekomenduje się także wdrożenie pełnego monitoringu wydajności i bezpieczeństwa w całym środowisku.

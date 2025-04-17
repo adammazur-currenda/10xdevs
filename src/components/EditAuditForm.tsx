@@ -64,10 +64,11 @@ export default function EditAuditForm({ initialData }: EditAuditFormProps) {
     try {
       setIsGenerating(true);
       setFeedback(null);
-
-      const response = await fetch(`/api/audits/generate-summary`, {
+      const response = await fetch("/api/audits/" + initialData.id + "/generate-summary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ protocol }),
       });
 
@@ -76,7 +77,17 @@ export default function EditAuditForm({ initialData }: EditAuditFormProps) {
       }
 
       const data = await response.json();
-      setValue("summary", data.summary);
+      console.log("Received response:", data);
+
+      const { summary, keyFindings, recommendations } = data;
+
+      if (!summary || !Array.isArray(keyFindings) || !Array.isArray(recommendations)) {
+        throw new Error("Invalid response format from API");
+      }
+
+      const formattedSummary = `Summary:\n${summary}\n\nKey Findings:\n${keyFindings.map((finding) => `• ${finding}`).join("\n")}\n\nRecommendations:\n${recommendations.map((rec) => `• ${rec}`).join("\n")}`;
+
+      setValue("summary", formattedSummary);
       setFeedback({
         type: "success",
         message: "Summary generated successfully",
@@ -251,23 +262,27 @@ export default function EditAuditForm({ initialData }: EditAuditFormProps) {
               <label htmlFor="summary" className="block text-sm font-medium text-gray-700">
                 Summary
               </label>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onGenerateSummary}
-                disabled={
-                  isApproved || isGenerating || watch("protocol").length < 1000 || watch("protocol").length > 10000
-                }
-              >
-                {isGenerating ? (
-                  <span className="flex items-center">
-                    <LoadingSpinner />
-                    Generating...
-                  </span>
-                ) : (
-                  "Generate Summary"
-                )}
-              </Button>
+              <div className="flex items-center">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    void onGenerateSummary();
+                  }}
+                  disabled={
+                    isApproved || isGenerating || watch("protocol").length < 1000 || watch("protocol").length > 10000
+                  }
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center">
+                      <LoadingSpinner />
+                      Generating...
+                    </span>
+                  ) : (
+                    "Generate Summary"
+                  )}
+                </Button>
+              </div>
             </div>
             <Textarea
               id="summary"
