@@ -3,24 +3,15 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import Textarea from "@/components/Textarea";
 import { Feedback } from "@/components/Feedback";
-import { Modal } from "@/components/Modal";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import type {
-  CreateAuditCommand,
-  GenerateSummaryRequestDTO,
-  GenerateSummaryResponseDTO,
-  AuditDTO,
-  ApproveAuditCommand,
-} from "@/types";
+import type { CreateAuditCommand, AuditDTO } from "@/types";
 
 interface CreateAuditFormViewModel {
   id: string | null;
   audit_order_number: string;
   description: string;
   protocol: string;
-  summary: string;
-  status: "pending" | "approved" | "new";
-  isLoadingSummary: boolean;
+  status: "new";
   isSaving: boolean;
   errors: {
     audit_order_number?: string;
@@ -39,16 +30,13 @@ const initialFormState: CreateAuditFormViewModel = {
   audit_order_number: "",
   description: "",
   protocol: "",
-  summary: "",
   status: "new",
-  isLoadingSummary: false,
   isSaving: false,
   errors: {},
 };
 
 export function CreateAuditForm() {
   const [formState, setFormState] = useState<CreateAuditFormViewModel>(initialFormState);
-  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
 
   const handleInputChange = (field: keyof CreateAuditFormViewModel, value: string) => {
     setFormState((prev) => ({
@@ -80,35 +68,6 @@ export function CreateAuditForm() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleGenerateSummary = async () => {
-    if (!validateForm()) return;
-
-    setFormState((prev) => ({ ...prev, isLoadingSummary: true }));
-    try {
-      const response = await fetch("/api/audits/generate-summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ protocol: formState.protocol } as GenerateSummaryRequestDTO),
-      });
-
-      if (!response.ok) throw new Error("Failed to generate summary");
-
-      const data = (await response.json()) as GenerateSummaryResponseDTO;
-      setFormState((prev) => ({
-        ...prev,
-        summary: data.summary,
-        isLoadingSummary: false,
-      }));
-    } catch (error: unknown) {
-      console.error("Failed to generate summary:", error);
-      setFormState((prev) => ({
-        ...prev,
-        isLoadingSummary: false,
-        errors: { ...prev.errors, summary: "Failed to generate summary. Please try again." },
-      }));
-    }
-  };
-
   const handleSave = async () => {
     if (!validateForm()) return;
 
@@ -135,7 +94,6 @@ export function CreateAuditForm() {
       setFormState((prev) => ({
         ...prev,
         id: data.id,
-        status: "pending",
         isSaving: false,
         feedback: {
           type: "success",
@@ -149,53 +107,6 @@ export function CreateAuditForm() {
         feedback: {
           type: "error",
           message: error instanceof Error ? error.message : "Failed to save audit. Please try again.",
-        },
-      }));
-    }
-  };
-
-  const handleApproveClick = () => {
-    setShowApproveConfirm(true);
-  };
-
-  const handleApproveConfirm = async () => {
-    setShowApproveConfirm(false);
-    await handleApprove();
-  };
-
-  const handleApprove = async () => {
-    if (!formState.id) return;
-
-    setFormState((prev) => ({ ...prev, isSaving: true, feedback: undefined }));
-    try {
-      const response = await fetch(`/api/audits/${formState.id}/approve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: true } as ApproveAuditCommand),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to approve audit");
-      }
-
-      await response.json();
-      setFormState((prev) => ({
-        ...prev,
-        status: "approved",
-        isSaving: false,
-        feedback: {
-          type: "success",
-          message: "Audit approved successfully",
-        },
-      }));
-    } catch (error) {
-      setFormState((prev) => ({
-        ...prev,
-        isSaving: false,
-        feedback: {
-          type: "error",
-          message: error instanceof Error ? error.message : "Failed to approve audit. Please try again.",
         },
       }));
     }
@@ -223,7 +134,6 @@ export function CreateAuditForm() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange("audit_order_number", e.target.value)
             }
-            disabled={formState.status === "approved"}
             error={formState.errors.audit_order_number}
             aria-invalid={!!formState.errors.audit_order_number}
             aria-describedby={formState.errors.audit_order_number ? "audit_order_number-error" : undefined}
@@ -238,7 +148,6 @@ export function CreateAuditForm() {
             id="description"
             value={formState.description}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("description", e.target.value)}
-            disabled={formState.status === "approved"}
           />
         </div>
 
@@ -250,7 +159,6 @@ export function CreateAuditForm() {
             id="protocol"
             value={formState.protocol}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("protocol", e.target.value)}
-            disabled={formState.status === "approved"}
             error={!!formState.errors.protocol}
             aria-invalid={!!formState.errors.protocol}
             aria-describedby={formState.errors.protocol ? "protocol-error" : undefined}
@@ -261,41 +169,7 @@ export function CreateAuditForm() {
               {formState.errors.protocol}
             </p>
           )}
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <label htmlFor="summary" className="block text-sm font-medium">
-              Summary
-            </label>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleGenerateSummary}
-              disabled={
-                formState.status === "approved" ||
-                formState.isLoadingSummary ||
-                formState.protocol.length < 1000 ||
-                formState.protocol.length > 10000
-              }
-            >
-              {formState.isLoadingSummary ? (
-                <span className="flex items-center">
-                  <LoadingSpinner />
-                  Generating...
-                </span>
-              ) : (
-                "Generate Summary"
-              )}
-            </Button>
-          </div>
-          <Textarea
-            id="summary"
-            value={formState.summary}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("summary", e.target.value)}
-            disabled={formState.status === "approved" || !formState.summary}
-            className="min-h-[150px]"
-          />
+          <p className="mt-2 text-sm text-gray-500">{formState.protocol.length} / 10000 characters</p>
         </div>
       </div>
 
@@ -305,10 +179,10 @@ export function CreateAuditForm() {
           type="button"
           variant="primary"
           onClick={handleSave}
-          disabled={formState.status === "approved" || formState.isSaving}
-          className={formState.isSaving && formState.status === "new" ? "opacity-70 cursor-wait" : ""}
+          disabled={formState.isSaving}
+          className={formState.isSaving ? "opacity-70 cursor-wait" : ""}
         >
-          {formState.isSaving && formState.status === "new" ? (
+          {formState.isSaving ? (
             <span className="flex items-center">
               <LoadingSpinner />
               Saving...
@@ -317,40 +191,7 @@ export function CreateAuditForm() {
             "Save Audit"
           )}
         </Button>
-        {formState.id && formState.status === "pending" && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleApproveClick}
-            disabled={formState.isSaving}
-            className={formState.isSaving ? "opacity-70 cursor-wait" : ""}
-          >
-            {formState.isSaving ? (
-              <span className="flex items-center">
-                <LoadingSpinner />
-                Approving...
-              </span>
-            ) : (
-              "Approve Audit"
-            )}
-          </Button>
-        )}
       </div>
-
-      <Modal isOpen={showApproveConfirm} onClose={() => setShowApproveConfirm(false)} className="max-w-md">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Confirm Approval</h2>
-          <p>Are you sure you want to approve this audit? This action cannot be undone.</p>
-          <div className="flex justify-end space-x-3">
-            <Button variant="ghost" onClick={() => setShowApproveConfirm(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleApproveConfirm}>
-              Approve
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </form>
   );
 }
