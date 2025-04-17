@@ -113,9 +113,11 @@ export function CreateAuditForm() {
 
     setFormState((prev) => ({ ...prev, isSaving: true, feedback: undefined }));
     try {
-      const response = await fetch("/api/audits.new", {
+      const response = await fetch("/api/audits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           audit_order_number: formState.audit_order_number,
           protocol: formState.protocol,

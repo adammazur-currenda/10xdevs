@@ -1,6 +1,6 @@
 import type { supabaseClient } from "../../db/supabase.client";
-import type { ListAuditsResponseDTO } from "../../types";
-import { AuditListError, InvalidSortingError } from "../errors/audit.errors";
+import type { ListAuditsResponseDTO, CreateAuditCommand, AuditDTO } from "../../types";
+import { AuditListError, InvalidSortingError, AuditCreationError } from "../errors/audit.errors";
 
 type SupabaseClient = typeof supabaseClient;
 
@@ -19,6 +19,38 @@ export class AuditService {
   private validateSortColumn(column: string): asserts column is AllowedSortColumn {
     if (!ALLOWED_SORT_COLUMNS.includes(column as AllowedSortColumn)) {
       throw new InvalidSortingError(column);
+    }
+  }
+
+  async createAudit(command: CreateAuditCommand, userId: string): Promise<AuditDTO> {
+    try {
+      const { data, error } = await this.supabase
+        .from("audits")
+        .insert({
+          audit_order_number: command.audit_order_number,
+          protocol: command.protocol,
+          description: command.description,
+          status: "pending",
+          summary: "",
+          user_id: userId,
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        throw new AuditCreationError(`Database error while creating audit: ${error.message}`, error);
+      }
+
+      if (!data) {
+        throw new AuditCreationError("Failed to create audit: No data returned");
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof AuditCreationError) {
+        throw error;
+      }
+      throw new AuditCreationError("Unexpected error while creating audit", error);
     }
   }
 

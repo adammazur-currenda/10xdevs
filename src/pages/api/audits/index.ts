@@ -1,60 +1,132 @@
-import type { APIRoute } from "astro";
 import { z } from "zod";
-import { supabaseClient, DEFAULT_USER_ID } from "../../../db/supabase.client";
+import type { APIRoute } from "astro";
 import type { ListAuditsResponseDTO } from "../../../types";
+import { AuditService } from "../../../lib/services/audit.service";
+import { supabaseClient, DEFAULT_USER_ID } from "../../../db/supabase.client";
+import { AuditListError, InvalidSortingError } from "../../../lib/errors/audit.errors";
+import { createAuditSchema } from "../../../lib/schemas/audit.schema";
+
+// Initialize audit service
+const auditService = new AuditService(supabaseClient);
+
+// Validation schema for query parameters
+const queryParamsSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().min(1).max(100).default(10),
+  sort: z.enum(["created_at", "-created_at", "audit_order_number", "-audit_order_number"]).optional(),
+});
 
 export const prerender = false;
 
-// Schema for query parameters
-const querySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(10),
-  sort: z.enum(["created_at", "-created_at", "audit_order_number", "-audit_order_number"]).default("-created_at"),
-});
-
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
-    const searchParams = Object.fromEntries(url.searchParams.entries());
-    const { page, limit, sort } = querySchema.parse(searchParams);
+    console.log("[GET /audits] Processing request", { url: request.url });
 
-    // Calculate offset
-    const offset = (page - 1) * limit;
+    // Parse and validate query parameters
+    const url = new URL(request.url);
+    const queryResult = queryParamsSchema.safeParse({
+      page: url.searchParams.get("page"),
+      limit: url.searchParams.get("limit"),
+      sort: url.searchParams.get("sort"),
+    });
 
-    // Determine sort column and direction
-    const sortColumn = sort.startsWith("-") ? sort.slice(1) : sort;
-    const sortDirection = sort.startsWith("-") ? "desc" : "asc";
-
-    // Get audits with pagination
-    const {
-      data: audits,
-      error: fetchError,
-      count,
-    } = await supabaseClient
-      .from("audits")
-      .select("*", { count: "exact" })
-      .eq("user_id", DEFAULT_USER_ID)
-      .order(sortColumn, { ascending: sortDirection === "asc" })
-      .range(offset, offset + limit - 1);
-
-    if (fetchError) {
-      throw fetchError;
+    if (!queryResult.success) {
+      console.warn("[GET /audits] Invalid query parameters", queryResult.error.issues);
+      return new Response(
+        JSON.stringify({
+          error: "Invalid query parameters",
+          details: queryResult.error.issues,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const response: ListAuditsResponseDTO = {
-      audits: audits || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-      },
-    };
+    const { page, limit, sort } = queryResult.data;
+    console.log("[GET /audits] Validated parameters", { page, limit, sort });
+
+    // Get audits from service layer using default user ID
+    const response: ListAuditsResponseDTO = await auditService.listAudits(supabaseClient, DEFAULT_USER_ID, {
+      page,
+      limit,
+      sort,
+    });
 
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error fetching audits:", error);
+    console.error("[GET /audits] Error processing request:", error);
+
+    if (error instanceof InvalidSortingError) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid sorting parameter",
+          message: error.message,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (error instanceof AuditListError) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to retrieve audits",
+          message: error.message,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    // Parse and validate request body
+    const body = await request.json();
+    const result = createAuditSchema.safeParse(body);
+
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Validation error",
+          details: result.error.errors,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Create audit using service
+    const audit = await auditService.createAudit(result.data, DEFAULT_USER_ID);
+
+    return new Response(JSON.stringify(audit), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error creating audit:", error);
     return new Response(
       JSON.stringify({
         error: "Internal server error",

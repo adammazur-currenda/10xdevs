@@ -1,22 +1,16 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { GetAuditResponseDTO } from "../../../types";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../../../db/database.types";
-import { supabaseClient, DEFAULT_USER_ID } from "../../../db/supabase.client";
+import type { GetAuditResponseDTO } from "../../../../types";
+import { supabaseClient, DEFAULT_USER_ID } from "../../../../db/supabase.client";
 
 // Validate UUID format
 const uuidSchema = z.string().uuid({
   message: "Invalid audit ID format - must be a valid UUID",
 });
 
-interface Locals {
-  supabase: SupabaseClient<Database>;
-}
-
 export const prerender = false;
 
-export const GET: APIRoute = async ({ params, locals }) => {
+export const GET: APIRoute = async ({ params }) => {
   try {
     // 1. Validate UUID format
     const validationResult = uuidSchema.safeParse(params.id);
@@ -34,8 +28,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     const auditId = validationResult.data;
 
     // 2. Get audit details
-    const { supabase } = locals as Locals;
-    const { data: audit, error: dbError } = await supabase
+    const { data: audit, error: dbError } = await supabaseClient
       .from("audits")
       .select("*")
       .eq("id", auditId)
