@@ -100,6 +100,9 @@ export function CreateAuditForm() {
           message: "Audit saved successfully",
         },
       }));
+
+      // Redirect to edit page after successful save
+      window.location.href = `/audits/edit/${data.id}`;
     } catch (error) {
       setFormState((prev) => ({
         ...prev,

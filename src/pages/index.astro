@@ -1,8 +1,7 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
----
+export const prerender = false;
 
-<Layout>
-  <Welcome />
-</Layout>
+if (Astro.request.method === "GET") {
+  return Astro.redirect("/audits");
+}
+---
