@@ -1,40 +1,24 @@
-import { useState, useCallback, useEffect } from "react";
-import type { AuditDTO, ListAuditsResponseDTO, PaginationDTO, AuditListItemViewModel } from "../types";
+import { useCallback, useEffect, useState } from "react";
+import type { AuditDTO, AuditListItemViewModel, ListAuditsResponseDTO, PaginationDTO } from "../types";
 
-interface UseAuditsListParams {
-  initialPage?: number;
-  initialLimit?: number;
+type SortDirection = "asc" | "desc" | null;
+type SortColumn = number | null;
+
+interface Feedback {
+  message: string;
+  variant: "success" | "error";
 }
 
-interface UseAuditsListState {
-  audits: AuditListItemViewModel[];
-  pagination: PaginationDTO;
-  isLoading: boolean;
-  error: Error | null;
-  sortColumn: number | null;
-  sortDirection: "asc" | "desc" | null;
-  feedback: { variant: "error" | "success"; message: string } | null;
-}
+export function useAuditsList() {
+  const [audits, setAudits] = useState<AuditListItemViewModel[]>([]);
+  const [pagination, setPagination] = useState<PaginationDTO>({ page: 1, limit: 10, total: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [filter, setFilter] = useState("");
+  const [sortColumn, setSortColumn] = useState<SortColumn>(2); // Default to Created At column
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc"); // Default to descending
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
 
-const SORTABLE_COLUMNS = ["audit_order_number", "created_at", "status"];
-
-export function useAuditsList({ initialPage = 1, initialLimit = 10 }: UseAuditsListParams = {}) {
-  const [state, setState] = useState<UseAuditsListState>({
-    audits: [],
-    pagination: {
-      page: initialPage,
-      limit: initialLimit,
-      total: 0,
-    },
-    isLoading: true,
-    error: null,
-    sortColumn: 1,
-    sortDirection: "desc",
-    feedback: null,
-  });
-  const [filter, setFilterValue] = useState("");
-
-  // Transform AuditDTO to AuditListItemViewModel
   const transformAudit = useCallback((audit: AuditDTO): AuditListItemViewModel => {
     const isApproved = audit.status === "approved";
     return {
@@ -48,187 +32,111 @@ export function useAuditsList({ initialPage = 1, initialLimit = 10 }: UseAuditsL
     };
   }, []);
 
-  // Fetch audits from API
-  const fetchAudits = useCallback(
-    async (params: { page?: number; limit?: number; sort?: string }) => {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-      try {
-        const searchParams = new URLSearchParams({
-          page: params.page?.toString() || state.pagination.page.toString(),
-          limit: params.limit?.toString() || state.pagination.limit.toString(),
-        });
+  const getSortParam = useCallback(() => {
+    if (sortColumn === 2) return sortDirection === "desc" ? "-created_at" : "created_at";
+    if (sortColumn === 0) return sortDirection === "desc" ? "-audit_order_number" : "audit_order_number";
+    return "-created_at"; // Default sort
+  }, [sortColumn, sortDirection]);
 
-        if (params.sort) {
-          searchParams.append("sort", params.sort);
-        }
+  const fetchAudits = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const response = await fetch(`/api/audits?${searchParams}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch audits");
-        }
-
-        const data: ListAuditsResponseDTO = await response.json();
-        const transformedAudits = data.audits.map(transformAudit);
-
-        setState((prev) => ({
-          ...prev,
-          audits: transformedAudits,
-          pagination: data.pagination,
-          isLoading: false,
-        }));
-      } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error as Error,
-          isLoading: false,
-          feedback: {
-            variant: "error",
-            message: "Wystąpił błąd podczas pobierania listy audytów",
-          },
-        }));
-      }
-    },
-    [state.pagination.page, state.pagination.limit, transformAudit]
-  );
-
-  // Handle sorting
-  const handleSort = useCallback(
-    (columnIndex: number) => {
-      const column = SORTABLE_COLUMNS[columnIndex];
-      if (!column) return;
-
-      setState((prev) => {
-        const newDirection: "asc" | "desc" | null =
-          prev.sortColumn === columnIndex
-            ? prev.sortDirection === "asc"
-              ? "desc"
-              : prev.sortDirection === "desc"
-                ? null
-                : "asc"
-            : "asc";
-
-        const newState = {
-          ...prev,
-          sortColumn: newDirection ? columnIndex : null,
-          sortDirection: newDirection,
-        };
-
-        // Trigger fetch with new sort
-        const sortParam = newDirection ? `${newDirection === "desc" ? "-" : ""}${column}` : undefined;
-        fetchAudits({ sort: sortParam });
-
-        return newState;
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        sort: getSortParam(),
       });
-    },
-    [fetchAudits]
-  );
 
-  // Delete audit
+      if (filter) {
+        params.append("filter", filter);
+      }
+
+      const response = await fetch(`/api/audits?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch audits");
+      }
+
+      const data: ListAuditsResponseDTO = await response.json();
+      setAudits(data.audits.map(transformAudit));
+      setPagination(data.pagination);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pagination.page, pagination.limit, filter, getSortParam, transformAudit]);
+
+  // Refresh list when sort parameters change
+  useEffect(() => {
+    fetchAudits();
+  }, [sortColumn, sortDirection, fetchAudits]);
+
+  const setPage = useCallback((page: number) => {
+    setPagination((prev) => ({ ...prev, page }));
+  }, []);
+
+  const setLimit = useCallback((limit: number) => {
+    setPagination((prev) => ({ ...prev, page: 1, limit }));
+  }, []);
+
   const deleteAudit = useCallback(
-    async (auditId: string): Promise<boolean> => {
+    async (id: string) => {
       try {
-        const response = await fetch(`/api/audits/${auditId}`, {
+        const response = await fetch(`/api/audits/${id}`, {
           method: "DELETE",
         });
 
-        if (response.status === 403) {
-          setState((prev) => ({
-            ...prev,
-            feedback: {
-              variant: "error",
-              message: "Nie można usunąć zatwierdzonego audytu",
-            },
-          }));
-          return false;
-        }
-
-        if (response.status === 404) {
-          setState((prev) => ({
-            ...prev,
-            feedback: {
-              variant: "error",
-              message: "Audyt nie został znaleziony",
-            },
-          }));
-          return false;
-        }
-
         if (!response.ok) {
-          throw new Error("Failed to delete audit");
+          const error = await response.json();
+          setFeedback({
+            message: error.error || "Failed to delete audit",
+            variant: "error",
+          });
+          return false;
         }
 
-        setState((prev) => ({
-          ...prev,
-          feedback: {
-            variant: "success",
-            message: "Audyt został usunięty",
-          },
-        }));
-
-        // Refresh the list
-        await fetchAudits({});
+        await fetchAudits();
+        setFeedback({
+          message: "Audit deleted successfully",
+          variant: "success",
+        });
         return true;
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          feedback: {
-            variant: "error",
-            message: "Wystąpił błąd podczas usuwania audytu",
-          },
-        }));
+        setFeedback({
+          message: "Failed to delete audit",
+          variant: "error",
+        });
         return false;
       }
     },
     [fetchAudits]
   );
 
-  // Filter audits client-side
-  const filteredAudits = useCallback(() => {
-    if (!filter) return state.audits;
-    return state.audits.filter((audit) => audit.auditOrderNumber.toLowerCase().includes(filter.toLowerCase()));
-  }, [state.audits, filter]);
-
-  // Pagination handlers
-  const setPage = useCallback(
-    (page: number) => {
-      fetchAudits({ page });
-    },
-    [fetchAudits]
-  );
-
-  const setLimit = useCallback(
-    (limit: number) => {
-      fetchAudits({ page: 1, limit });
-    },
-    [fetchAudits]
-  );
-
-  // Debounced filter setter
-  const setFilter = useCallback((value: string) => {
-    setFilterValue(value);
+  const handleSort = useCallback((columnIndex: number) => {
+    setSortColumn((prevColumn) => {
+      if (prevColumn === columnIndex) {
+        setSortDirection((prevDirection) => (prevDirection === "asc" ? "desc" : "asc"));
+        return columnIndex;
+      }
+      setSortDirection("asc");
+      return columnIndex;
+    });
   }, []);
 
-  // Initial fetch with default sorting
-  useEffect(() => {
-    fetchAudits({
-      page: initialPage,
-      limit: initialLimit,
-      sort: "-created_at",
-    });
-  }, [fetchAudits, initialPage, initialLimit]);
-
   return {
-    audits: filteredAudits(),
-    pagination: state.pagination,
-    isLoading: state.isLoading,
-    error: state.error,
-    sortColumn: state.sortColumn,
-    sortDirection: state.sortDirection,
+    audits,
+    pagination,
+    isLoading,
+    error,
     setPage,
     setLimit,
     setFilter,
     deleteAudit,
+    sortColumn,
+    sortDirection,
     handleSort,
-    feedback: state.feedback,
+    feedback,
   };
 }
