@@ -100,12 +100,14 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
+  const operation = "POST /audits";
   try {
     // Parse and validate request body
     const body = await request.json();
     const result = createAuditSchema.safeParse(body);
 
     if (!result.success) {
+      console.warn(`${operation} - Validation error:`, result.error.errors);
       return new Response(
         JSON.stringify({
           error: "Validation error",
@@ -118,18 +120,57 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    const { audit_order_number } = result.data;
+
+    // Check if audit order number already exists
+    const { data: existingAudit, error: checkError } = await supabaseClient
+      .from("audits")
+      .select("audit_order_number")
+      .eq("audit_order_number", audit_order_number)
+      .eq("user_id", DEFAULT_USER_ID)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error(`${operation} - Error checking audit number uniqueness:`, checkError);
+      return new Response(
+        JSON.stringify({
+          error: "Internal server error",
+          message: "Wystąpił błąd podczas weryfikacji numeru zlecenia. Proszę spróbować ponownie.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (existingAudit) {
+      console.warn(`${operation} - Duplicate audit order number:`, { audit_order_number });
+      return new Response(
+        JSON.stringify({
+          error: "Duplicate audit order number",
+          message: `Numer zlecenia "${audit_order_number}" jest już zajęty. Proszę wybrać inny numer zlecenia.`,
+          code: "DUPLICATE_AUDIT_NUMBER",
+        }),
+        {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Create audit using service
     const audit = await auditService.createAudit(result.data, DEFAULT_USER_ID);
-
     return new Response(JSON.stringify(audit), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error creating audit:", error);
+    console.error(`${operation} - Unexpected error:`, error);
     return new Response(
       JSON.stringify({
         error: "Internal server error",
+        message: "Wystąpił nieoczekiwany błąd. Proszę spróbować ponownie.",
       }),
       {
         status: 500,
