@@ -20,24 +20,9 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
-    console.log("[GET /audits] Processing request", { url: request.url });
-
-    // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
-      return new Response(
-        JSON.stringify({
-          error: "Unauthorized",
-        }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Parse and validate query parameters
     const url = new URL(request.url);
+
+    // Validate query parameters
     const queryResult = queryParamsSchema.safeParse({
       page: url.searchParams.get("page"),
       limit: url.searchParams.get("limit"),
@@ -65,8 +50,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Initialize audit service with Supabase instance from locals
     const auditService = new AuditService(locals.supabase);
 
-    // Get audits from service layer using session user ID
-    const response: ListAuditsResponseDTO = await auditService.listAudits(locals.supabase, session.user.id, {
+    // Get audits from service layer using user ID from auth
+    const response: ListAuditsResponseDTO = await auditService.listAudits(locals.supabase, locals.auth.user.id, {
       page,
       limit,
       sort,
@@ -121,9 +106,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   const operation = "POST /audits";
   try {
-    // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
+    // Sprawdź czy użytkownik jest zalogowany i pobierz jego ID
+    const user = locals.auth.user;
+    if (!user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -160,7 +145,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .from("audits")
       .select("audit_order_number")
       .eq("audit_order_number", audit_order_number)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (checkError) {
@@ -196,7 +181,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const auditService = new AuditService(locals.supabase);
 
     // Create audit using service
-    const audit = await auditService.createAudit(result.data, session.user.id);
+    const audit = await auditService.createAudit(result.data, user.id);
     return new Response(JSON.stringify(audit), {
       status: 201,
       headers: { "Content-Type": "application/json" },

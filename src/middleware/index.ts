@@ -13,8 +13,8 @@ export const onRequest = defineMiddleware(async ({ cookies, request, redirect, l
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const url = new URL(request.url);
   const isPublicPath = PUBLIC_PATHS.includes(url.pathname);
@@ -23,12 +23,12 @@ export const onRequest = defineMiddleware(async ({ cookies, request, redirect, l
   // Dodaj informacje o sesji i instancję Supabase do locals
   locals.supabase = supabase;
   locals.auth = {
-    session,
-    validate: async () => session,
+    user,
+    validate: async () => user,
   };
 
   // Dla ścieżek API nie robimy przekierowania, tylko zwracamy błąd 401
-  if (isApiPath && !API_PATHS.includes(url.pathname) && !session) {
+  if (isApiPath && !API_PATHS.includes(url.pathname) && !user) {
     return new Response(
       JSON.stringify({
         error: "Unauthorized",
@@ -41,12 +41,12 @@ export const onRequest = defineMiddleware(async ({ cookies, request, redirect, l
   }
 
   // Przekieruj zalogowanych użytkowników z public paths na /audits
-  if (session && isPublicPath) {
+  if (user && isPublicPath) {
     return redirect("/audits");
   }
 
   // Przekieruj niezalogowanych użytkowników do logowania dla chronionych ścieżek
-  if (!session && !isPublicPath && !isApiPath) {
+  if (!user && !isPublicPath && !isApiPath) {
     return redirect("/auth/login");
   }
 

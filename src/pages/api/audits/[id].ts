@@ -23,8 +23,8 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const operation = "GET /audits/[id]";
   try {
     // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
+    const user = locals.auth?.user;
+    if (!user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -59,13 +59,13 @@ export const GET: APIRoute = async ({ params, locals }) => {
       .from("audits")
       .select()
       .eq("id", auditId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (error) {
       console.error(`${operation} - Database error for audit ${auditId}:`, {
         error,
-        user_id: session.user.id,
+        user_id: user.id,
       });
       return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
@@ -76,7 +76,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     if (!audit) {
       console.warn(`${operation} - Audit not found:`, {
         audit_id: auditId,
-        user_id: session.user.id,
+        user_id: user.id,
       });
       return new Response(JSON.stringify({ error: "Audit not found" }), {
         status: 404,
@@ -101,10 +101,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ params, locals }) => {
+  const operation = "DELETE /audits/[id]";
   try {
     // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
+    const user = locals.auth?.user;
+    if (!user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -116,12 +117,14 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
 
-    // Validate the ID parameter
-    const validationResult = uuidSchema.safeParse(params.id);
-    if (!validationResult.success) {
+    // Validate UUID format
+    const result = uuidSchema.safeParse(params.id);
+    if (!result.success) {
+      console.warn(`${operation} - Invalid UUID format:`, params.id);
       return new Response(
         JSON.stringify({
-          error: "Invalid audit ID format",
+          error: "Invalid request",
+          details: result.error.issues[0].message,
         }),
         {
           status: 400,
@@ -129,14 +132,15 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
         }
       );
     }
-    const auditId = validationResult.data;
+
+    const auditId = result.data;
 
     // Get the audit record to check if it exists and its status
     const { data: audit, error: fetchError } = await locals.supabase
       .from("audits")
       .select("*")
       .eq("id", auditId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError || !audit) {
@@ -169,7 +173,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       .from("audits")
       .delete()
       .eq("id", auditId)
-      .eq("user_id", session.user.id);
+      .eq("user_id", user.id);
 
     if (deleteError) {
       throw deleteError;
@@ -179,7 +183,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       status: 204,
     });
   } catch (error) {
-    console.error("Error deleting audit:", error);
+    console.error(`${operation} - Unexpected error:`, error);
     return new Response(
       JSON.stringify({
         error: "Internal server error",
@@ -196,8 +200,8 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const operation = "PATCH /audits/[id]";
   try {
     // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
+    const user = locals.auth?.user;
+    if (!user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -209,23 +213,30 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    const { id } = params;
-
     // Validate UUID format
-    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-      console.warn(`${operation} - Invalid UUID format:`, id);
-      return new Response(JSON.stringify({ error: "Invalid audit ID format" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    const result = uuidSchema.safeParse(params.id);
+    if (!result.success) {
+      console.warn(`${operation} - Invalid UUID format:`, params.id);
+      return new Response(
+        JSON.stringify({
+          error: "Invalid request",
+          details: result.error.issues[0].message,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
+
+    const auditId = result.data;
 
     // Parse and validate request body
     const body = await request.json();
     const validationResult = updateAuditSchema.safeParse(body);
 
     if (!validationResult.success) {
-      console.warn(`${operation} - Invalid request data for audit ${id}:`, {
+      console.warn(`${operation} - Invalid request data for audit ${auditId}:`, {
         errors: validationResult.error.errors,
         body,
       });
@@ -247,14 +258,14 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     const { data: existingAudit, error: fetchError } = await locals.supabase
       .from("audits")
       .select("*")
-      .eq("id", id)
-      .eq("user_id", session.user.id)
+      .eq("id", auditId)
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError) {
-      console.error(`${operation} - Error fetching audit ${id}:`, {
+      console.error(`${operation} - Error fetching audit ${auditId}:`, {
         error: fetchError,
-        user_id: session.user.id,
+        user_id: user.id,
       });
       return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
@@ -264,8 +275,8 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
     if (!existingAudit) {
       console.warn(`${operation} - Audit not found:`, {
-        audit_id: id,
-        user_id: session.user.id,
+        audit_id: auditId,
+        user_id: user.id,
       });
       return new Response(JSON.stringify({ error: "Audit not found" }), {
         status: 404,
@@ -275,7 +286,7 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
     // Check if audit is approved
     if (existingAudit.status === "approved") {
-      console.warn(`${operation} - Attempt to update approved audit ${id}`);
+      console.warn(`${operation} - Attempt to update approved audit ${auditId}`);
       return new Response(JSON.stringify({ error: "Cannot update approved audit" }), {
         status: 403,
         headers: { "Content-Type": "application/json" },
@@ -286,16 +297,16 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     const { data: updatedAudit, error: updateError } = await locals.supabase
       .from("audits")
       .update(updateData)
-      .eq("id", id)
-      .eq("user_id", session.user.id)
+      .eq("id", auditId)
+      .eq("user_id", user.id)
       .select()
       .single();
 
     if (updateError) {
-      console.error(`${operation} - Error updating audit ${id}:`, {
+      console.error(`${operation} - Error updating audit ${auditId}:`, {
         error: updateError,
         update_data: updateData,
-        user_id: session.user.id,
+        user_id: user.id,
       });
       return new Response(JSON.stringify({ error: "Failed to update audit" }), {
         status: 500,

@@ -1,7 +1,7 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import { type AuditDTO } from "@/types";
-import EditAuditForm from "@/components/EditAuditForm";
+import Layout from "../../../layouts/Layout.astro";
+import { type AuditDTO } from "../../../types";
+import EditAuditForm from "../../../components/EditAuditForm";
 
 // Get the audit ID from URL params
 const { id } = Astro.params;
@@ -13,8 +13,8 @@ if (!id || !UUID_REGEX.test(id)) {
 }
 
 // Sprawdź czy użytkownik jest zalogowany
-const session = await Astro.locals.auth?.validate();
-if (!session) {
+const user = Astro.locals.auth?.user;
+if (!user) {
   return Astro.redirect("/auth/login");
 }
 
@@ -28,7 +28,7 @@ try {
     .from("audits")
     .select("*")
     .eq("id", id)
-    .eq("user_id", session.user.id)
+    .eq("user_id", user.id)
     .single();
 
   if (fetchError) {
@@ -45,7 +45,7 @@ try {
 }
 ---
 
-<Layout>
+<Layout title={audit ? `Edycja audytu ${audit.audit_order_number}` : "Błąd"}>
   <div class="container mx-auto px-4 py-8">
     {
       error && (
