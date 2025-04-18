@@ -2,16 +2,21 @@
 import Layout from "../../layouts/Layout.astro";
 import { RegisterForm } from "../../components/auth/RegisterForm";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { createSupabaseServerInstance } from "../../db/supabase.client";
 
 // Redirect if already logged in
-const session = await Astro.locals.auth.validate();
-if (session) {
+const supabase = createSupabaseServerInstance({ cookies: Astro.cookies, headers: Astro.request.headers });
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+if (user) {
   return Astro.redirect("/audits");
 }
 ---
 
 <Layout title="Create account">
-  <AuthLayout title="Create your account" description="Join us today and start managing your audits." client:load>
+  <AuthLayout title="Create your account" description="Join us today and start managing your audits.">
     <RegisterForm client:load />
   </AuthLayout>
 </Layout>

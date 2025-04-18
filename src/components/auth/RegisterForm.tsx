@@ -3,20 +3,16 @@ import { Form } from "../Form";
 import { Input } from "../Input";
 import { Button } from "../Button";
 
-interface RegisterFormProps {
-  onSubmit: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
-}
-
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
+export const RegisterForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError(undefined);
 
     if (password !== passwordConfirmation) {
       setError("Passwords do not match");
@@ -26,10 +22,27 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
     setIsLoading(true);
 
     try {
-      await onSubmit(email, password, passwordConfirmation);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: "Failed to parse response" }));
+        throw new Error(data.error || "Failed to register");
+      }
+
+      // After successful registration, redirect to login page
+      window.location.href = "/auth/login?registered=true";
     } catch (err) {
+      console.error("Registration error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
