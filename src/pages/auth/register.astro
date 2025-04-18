@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { RegisterForm } from "../../components/auth/RegisterForm";
+import AuthLayout from "../../components/auth/AuthLayout";
+
+// Redirect if already logged in
+const session = await Astro.locals.auth.validate();
+if (session) {
+  return Astro.redirect("/audits");
+}
+---
+
+<Layout title="Create account">
+  <AuthLayout title="Create your account" description="Join us today and start managing your audits." client:load>
+    <RegisterForm client:load />
+  </AuthLayout>
+</Layout>

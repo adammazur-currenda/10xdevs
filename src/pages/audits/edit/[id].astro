@@ -12,24 +12,33 @@ if (!id || !UUID_REGEX.test(id)) {
   return Astro.redirect("/404");
 }
 
+// Sprawdź czy użytkownik jest zalogowany
+const session = await Astro.locals.auth?.validate();
+if (!session) {
+  return Astro.redirect("/auth/login");
+}
+
 // Fetch audit data
 let audit: AuditDTO | null = null;
 let error: string | null = null;
 
 try {
-  // Use Astro.url to get the base URL and construct the full API URL
-  const apiUrl = new URL("/api/audits/" + id, Astro.url.origin);
-  const response = await fetch(apiUrl);
+  // Użyj bezpośrednio instancji Supabase z locals
+  const { data, error: fetchError } = await Astro.locals.supabase
+    .from("audits")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", session.user.id)
+    .single();
 
-  if (!response.ok) {
-    if (response.status === 404) {
+  if (fetchError) {
+    if (fetchError.code === "PGRST116") {
       return Astro.redirect("/404");
     }
-    const errorData = await response.json();
-    throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+    throw fetchError;
   }
 
-  audit = await response.json();
+  audit = data;
 } catch (e) {
   console.error("Error fetching audit:", e);
   error = e instanceof Error ? e.message : "An unexpected error occurred";

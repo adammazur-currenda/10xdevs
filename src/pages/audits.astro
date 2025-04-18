@@ -1,6 +1,12 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { AuditsDashboard } from '../components/AuditsDashboard';
+import Layout from "../layouts/Layout.astro";
+import { AuditsDashboard } from "../components/AuditsDashboard";
+
+// Sprawdź czy użytkownik jest zalogowany
+const session = await Astro.locals.auth?.validate();
+if (!session) {
+  return Astro.redirect("/auth/login");
+}
 ---
 
 <Layout title="Audits">
@@ -8,4 +14,4 @@ import { AuditsDashboard } from '../components/AuditsDashboard';
     <h1 class="text-3xl font-bold mb-6">Audits</h1>
     <AuditsDashboard client:load />
   </main>
-</Layout> 
+</Layout>

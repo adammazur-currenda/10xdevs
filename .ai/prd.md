@@ -53,14 +53,18 @@ Przeprowadzenie audytu IT wiąże się z ręcznym wpisywaniem obszernych, szczeg
   - Przycisk "Akceptuję rezultat audytu" jest dostępny po zakończeniu edycji.
   - Po zatwierdzeniu audytu, pola edycji stają się nieaktywne, a audyt jest zapisany jako finalny.
 
-### US-004: Uwierzytelnianie użytkownika
+### US-004: Uwierzytelnianie i dostępy użytkownika
 - ID: US-004
 - Tytuł: Logowanie i rejestracja użytkownika
-- Opis: System umożliwia użytkownikowi logowanie i rejestrację, aby powiązać audyty z indywidualnym kontem. Uwierzytelnienie gwarantuje, że tylko autoryzowani użytkownicy mają dostęp do swoich audytów.
+- Opis: System umożliwia użytkownikowi logowanie i rejestrację, aby powiązać audyty z indywidualnym kontem. Uwierzytelnienie gwarantuje, że tylko autoryzowani użytkownicy mają dostęp do edycji swoich audytów.
 - Kryteria akceptacji:
-  - Formularz logowania i rejestracji jest dostępny.
-  - Użytkownik po poprawnym uwierzytelnieniu widzi swoje powiązane audyty.
+  - Użytkownik MOŻE korzystać z listy audytów bez logowania do systemu.
+  - Użytkownik NIE MOŻE dodawać, edytować i usuwać audytów bez zalogowania.
+  - Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu.
+  - Użytkownik może wylogować się z systemu poprzez przycisk w prawym górnym rogu.
+  - Formularz logowania i rejestracji jest dostępny jako dedykowana strona.
   - System zapewnia podstawową walidację danych logowania.
+  - Odzyskiwanie hasła powinno być możliwe.
 
 ### US-005: Przeglądanie audytów
 - ID: US-005

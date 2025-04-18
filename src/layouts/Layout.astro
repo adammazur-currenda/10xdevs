@@ -1,21 +1,14 @@
 ---
 import "../styles/global.css";
-import { Navigation } from "@/components/Navigation";
+import { TopBar } from "@/components/TopBar";
+import { ViewTransitions } from "astro:transitions";
 
 interface Props {
   title?: string;
+  isLoginPage?: boolean;
 }
 
-const { title = "ITAuditor" } = Astro.props;
-
-const currentPath = Astro.url.pathname;
-const navigationItems = [
-  {
-    label: "Audits",
-    href: "/audits",
-    active: currentPath === "/audits",
-  },
-];
+const { title = "ITAuditor", isLoginPage = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -26,16 +19,10 @@ const navigationItems = [
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <ViewTransitions />
   </head>
   <body>
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4">
-        <div class="flex justify-between items-center h-16">
-          <a href="/" class="text-xl font-bold text-gray-900">ITAuditor</a>
-          <Navigation items={navigationItems} client:load />
-        </div>
-      </div>
-    </header>
+    <TopBar client:load isLoginPage={isLoginPage} />
     <slot />
   </body>
 </html>

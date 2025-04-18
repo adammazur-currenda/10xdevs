@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { GetAuditResponseDTO, UpdateAuditCommand } from "../../../types";
-import { supabaseClient, DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 // Disable prerendering for dynamic API route
 export const prerender = false;
@@ -20,9 +19,23 @@ const updateAuditSchema = z
   })
   .refine((data) => Object.keys(data).length > 0, { message: "At least one field must be provided for update" });
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, locals }) => {
   const operation = "GET /audits/[id]";
   try {
+    // Sprawdź czy użytkownik jest zalogowany
+    const session = await locals.auth?.validate();
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // 1. Validate UUID format
     const result = uuidSchema.safeParse(params.id);
     if (!result.success) {
@@ -42,17 +55,17 @@ export const GET: APIRoute = async ({ params }) => {
     const auditId = result.data;
 
     // 2. Query the database for the audit
-    const { data: audit, error } = await supabaseClient
+    const { data: audit, error } = await locals.supabase
       .from("audits")
       .select()
       .eq("id", auditId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", session.user.id)
       .single();
 
     if (error) {
       console.error(`${operation} - Database error for audit ${auditId}:`, {
         error,
-        user_id: DEFAULT_USER_ID,
+        user_id: session.user.id,
       });
       return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
@@ -63,7 +76,7 @@ export const GET: APIRoute = async ({ params }) => {
     if (!audit) {
       console.warn(`${operation} - Audit not found:`, {
         audit_id: auditId,
-        user_id: DEFAULT_USER_ID,
+        user_id: session.user.id,
       });
       return new Response(JSON.stringify({ error: "Audit not found" }), {
         status: 404,
@@ -79,7 +92,6 @@ export const GET: APIRoute = async ({ params }) => {
     console.error(`${operation} - Unexpected error:`, {
       error,
       params,
-      user_id: DEFAULT_USER_ID,
     });
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
@@ -88,8 +100,22 @@ export const GET: APIRoute = async ({ params }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
+    // Sprawdź czy użytkownik jest zalogowany
+    const session = await locals.auth?.validate();
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Validate the ID parameter
     const validationResult = uuidSchema.safeParse(params.id);
     if (!validationResult.success) {
@@ -106,11 +132,11 @@ export const DELETE: APIRoute = async ({ params }) => {
     const auditId = validationResult.data;
 
     // Get the audit record to check if it exists and its status
-    const { data: audit, error: fetchError } = await supabaseClient
+    const { data: audit, error: fetchError } = await locals.supabase
       .from("audits")
       .select("*")
       .eq("id", auditId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", session.user.id)
       .single();
 
     if (fetchError || !audit) {
@@ -139,11 +165,11 @@ export const DELETE: APIRoute = async ({ params }) => {
     }
 
     // Delete the audit
-    const { error: deleteError } = await supabaseClient
+    const { error: deleteError } = await locals.supabase
       .from("audits")
       .delete()
       .eq("id", auditId)
-      .eq("user_id", DEFAULT_USER_ID);
+      .eq("user_id", session.user.id);
 
     if (deleteError) {
       throw deleteError;
@@ -166,9 +192,23 @@ export const DELETE: APIRoute = async ({ params }) => {
   }
 };
 
-export const PATCH: APIRoute = async ({ params, request }) => {
+export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const operation = "PATCH /audits/[id]";
   try {
+    // Sprawdź czy użytkownik jest zalogowany
+    const session = await locals.auth?.validate();
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const { id } = params;
 
     // Validate UUID format
@@ -204,17 +244,17 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     const updateData = validationResult.data as UpdateAuditCommand;
 
     // Check if audit exists and is not approved
-    const { data: existingAudit, error: fetchError } = await supabaseClient
+    const { data: existingAudit, error: fetchError } = await locals.supabase
       .from("audits")
       .select("*")
       .eq("id", id)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", session.user.id)
       .single();
 
     if (fetchError) {
       console.error(`${operation} - Error fetching audit ${id}:`, {
         error: fetchError,
-        user_id: DEFAULT_USER_ID,
+        user_id: session.user.id,
       });
       return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
@@ -225,7 +265,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     if (!existingAudit) {
       console.warn(`${operation} - Audit not found:`, {
         audit_id: id,
-        user_id: DEFAULT_USER_ID,
+        user_id: session.user.id,
       });
       return new Response(JSON.stringify({ error: "Audit not found" }), {
         status: 404,
@@ -243,11 +283,11 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     }
 
     // Update audit
-    const { data: updatedAudit, error: updateError } = await supabaseClient
+    const { data: updatedAudit, error: updateError } = await locals.supabase
       .from("audits")
       .update(updateData)
       .eq("id", id)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", session.user.id)
       .select()
       .single();
 
@@ -255,7 +295,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       console.error(`${operation} - Error updating audit ${id}:`, {
         error: updateError,
         update_data: updateData,
-        user_id: DEFAULT_USER_ID,
+        user_id: session.user.id,
       });
       return new Response(JSON.stringify({ error: "Failed to update audit" }), {
         status: 500,
@@ -271,7 +311,6 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     console.error(`${operation} - Unexpected error:`, {
       error,
       params,
-      user_id: DEFAULT_USER_ID,
     });
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,

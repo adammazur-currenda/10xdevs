@@ -2,12 +2,8 @@ import { z } from "zod";
 import type { APIRoute } from "astro";
 import type { ListAuditsResponseDTO } from "../../../types";
 import { AuditService } from "../../../lib/services/audit.service";
-import { supabaseClient, DEFAULT_USER_ID } from "../../../db/supabase.client";
 import { AuditListError, InvalidSortingError } from "../../../lib/errors/audit.errors";
 import { createAuditSchema } from "../../../lib/schemas/audit.schema";
-
-// Initialize audit service
-const auditService = new AuditService(supabaseClient);
 
 // Validation schema for query parameters
 const queryParamsSchema = z.object({
@@ -22,9 +18,23 @@ const queryParamsSchema = z.object({
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async ({ request, locals }) => {
   try {
     console.log("[GET /audits] Processing request", { url: request.url });
+
+    // Sprawdź czy użytkownik jest zalogowany
+    const session = await locals.auth?.validate();
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Parse and validate query parameters
     const url = new URL(request.url);
@@ -52,8 +62,11 @@ export const GET: APIRoute = async ({ request }) => {
     const { page, limit, sort, filter } = queryResult.data;
     console.log("[GET /audits] Validated parameters", { page, limit, sort, filter });
 
-    // Get audits from service layer using default user ID
-    const response: ListAuditsResponseDTO = await auditService.listAudits(supabaseClient, DEFAULT_USER_ID, {
+    // Initialize audit service with Supabase instance from locals
+    const auditService = new AuditService(locals.supabase);
+
+    // Get audits from service layer using session user ID
+    const response: ListAuditsResponseDTO = await auditService.listAudits(locals.supabase, session.user.id, {
       page,
       limit,
       sort,
@@ -105,9 +118,23 @@ export const GET: APIRoute = async ({ request }) => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const operation = "POST /audits";
   try {
+    // Sprawdź czy użytkownik jest zalogowany
+    const session = await locals.auth?.validate();
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const result = createAuditSchema.safeParse(body);
@@ -129,11 +156,11 @@ export const POST: APIRoute = async ({ request }) => {
     const { audit_order_number } = result.data;
 
     // Check if audit order number already exists
-    const { data: existingAudit, error: checkError } = await supabaseClient
+    const { data: existingAudit, error: checkError } = await locals.supabase
       .from("audits")
       .select("audit_order_number")
       .eq("audit_order_number", audit_order_number)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", session.user.id)
       .maybeSingle();
 
     if (checkError) {
@@ -165,8 +192,11 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Initialize audit service with Supabase instance from locals
+    const auditService = new AuditService(locals.supabase);
+
     // Create audit using service
-    const audit = await auditService.createAudit(result.data, DEFAULT_USER_ID);
+    const audit = await auditService.createAudit(result.data, session.user.id);
     return new Response(JSON.stringify(audit), {
       status: 201,
       headers: { "Content-Type": "application/json" },
