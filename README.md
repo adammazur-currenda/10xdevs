@@ -9,6 +9,9 @@ ITAuditor is a minimal viable product aimed at automating and summarizing IT aud
 - **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, Shadcn/ui
 - **Backend:** Supabase (PostgreSQL, authentication)
 - **AI Integration:** Openrouter.ai for generating audit summaries
+- **Testing:** 
+  - **Unit Tests:** Vitest, React Testing Library, MSW (Mock Service Worker)
+  - **E2E Tests:** Playwright, Storybook with Percy/Chromatic for visual regression testing
 - **CI/CD & Hosting:** GitHub Actions & DigitalOcean
 - **Other:** Node.js (v22.14.0 as specified in .nvmrc)
 
