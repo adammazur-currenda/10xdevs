@@ -3,25 +3,37 @@ import { Form } from "../Form";
 import { Input } from "../Input";
 import { Button } from "../Button";
 
-interface ResetPasswordFormProps {
-  onSubmit: (email: string) => Promise<void>;
-}
-
-export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSubmit }) => {
+export const ResetPasswordForm: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError(undefined);
     setIsLoading(true);
 
     try {
-      await onSubmit(email);
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+        },
+        body: JSON.stringify({ email }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: "Failed to parse response" }));
+        throw new Error(data.error || "Failed to send reset password email");
+      }
+
       setIsSuccess(true);
     } catch (err) {
+      console.error("Reset password error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
