@@ -161,7 +161,54 @@ export default function EditAuditForm({ initialData }: EditAuditFormProps) {
     }
   };
 
-  const handleApproveClick = () => {
+  const handleApproveClick = async () => {
+    const summary = watch("summary");
+    if (!summary?.trim()) {
+      setFeedback({
+        type: "error",
+        message: "Please generate or provide a summary before approving the audit",
+      });
+      return;
+    }
+
+    // Save changes before approval to ensure latest data is approved
+    setIsSaving(true);
+    try {
+      const formData = getValues();
+      const saveResponse = await fetch(`/api/audits/${initialData.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: formData.description,
+          protocol: formData.protocol,
+          summary: formData.summary,
+        }),
+      });
+
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.json();
+        throw new Error(errorData.message || "Failed to save changes before approval");
+      }
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to save changes before approval",
+      });
+      return;
+    } finally {
+      setIsSaving(false);
+    }
+
+    // Validate protocol before allowing approval
+    const isFormValid = await trigger("protocol");
+    if (!isFormValid) {
+      setFeedback({
+        type: "error",
+        message: "Please fix protocol validation errors before approving",
+      });
+      return;
+    }
+
     setShowApproveConfirm(true);
   };
 

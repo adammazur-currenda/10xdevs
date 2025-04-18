@@ -12,9 +12,9 @@ const uuidSchema = z.string().uuid({
 export const POST: APIRoute = async ({ params, locals }) => {
   const operation = "POST /audits/[id]/approve";
   try {
-    // Sprawdź czy użytkownik jest zalogowany
-    const session = await locals.auth?.validate();
-    if (!session) {
+    // Check if user is authenticated
+    const user = locals.auth?.user;
+    if (!user) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
       .from("audits")
       .select("*")
       .eq("id", auditId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError) {
@@ -92,12 +92,26 @@ export const POST: APIRoute = async ({ params, locals }) => {
       );
     }
 
+    // Validate that audit has required fields before approval
+    if (!audit.protocol || !audit.summary) {
+      console.warn(`${operation} - Audit missing required fields:`, { audit_id: auditId });
+      return new Response(
+        JSON.stringify({
+          error: "Audit cannot be approved - missing required fields (protocol or summary)",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Update audit status to approved
     const { data: updatedAudit, error: updateError } = await locals.supabase
       .from("audits")
       .update({ status: "approved" })
       .eq("id", auditId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .select()
       .single();
 
