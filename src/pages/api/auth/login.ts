@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     if (error) {
-      console.error("Supabase auth error:", error);
+      //console.error("Supabase auth error:", error);
       return new Response(
         JSON.stringify({
           error: error.message,

@@ -1,28 +1,39 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+// Ładujemy zmienne środowiskowe z pliku .env.test
+dotenv.config({ path: ".env.test" });
 
 export default defineConfig({
-  testDir: "./e2e",
-  fullyParallel: true,
+  testDir: "./tests/e2e",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [["html", { open: "never" }]],
+  reporter: "html",
   use: {
-    baseURL: "http://localhost:4321",
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
+    // Dodajemy zmienne środowiskowe do testów
+    testIdAttribute: "data-test-id",
     screenshot: "only-on-failure",
   },
+
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: {
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        },
+      },
     },
   ],
+
+  // Konfiguracja serwera deweloperskiego
   webServer: {
-    command: "npm run preview",
-    url: "http://localhost:4321",
+    command: "npm run dev",
+    port: 3000,
     reuseExistingServer: !process.env.CI,
-    stdout: "pipe",
-    stderr: "pipe",
+    timeout: 120000,
   },
 });

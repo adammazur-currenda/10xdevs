@@ -44,7 +44,7 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <Form onSubmit={handleSubmit} className="mt-8 space-y-6" data-test-id="login-form">
       <div className="space-y-4">
         <Input
           label="Email address"
@@ -55,6 +55,7 @@ export const LoginForm: React.FC = () => {
           placeholder="Enter your email"
           autoComplete="email"
           error={error}
+          data-test-id="login-email-input"
         />
         <Input
           label="Password"
@@ -64,6 +65,7 @@ export const LoginForm: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter your password"
           autoComplete="current-password"
+          data-test-id="login-password-input"
         />
       </div>
 
@@ -80,7 +82,7 @@ export const LoginForm: React.FC = () => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full" disabled={isLoading} data-test-id="login-submit-button">
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
     </Form>
