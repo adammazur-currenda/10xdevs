@@ -116,13 +116,14 @@ export function CreateAuditForm() {
   };
 
   return (
-    <form className="space-y-6" onSubmit={(e: React.FormEvent) => e.preventDefault()}>
+    <form className="space-y-6" onSubmit={(e: React.FormEvent) => e.preventDefault()} data-test-id="create-audit-form">
       {formState.feedback && (
         <Feedback
           variant={formState.feedback.type === "success" ? "success" : "error"}
           dismissible
           onClose={() => setFormState((prev) => ({ ...prev, feedback: undefined }))}
           className="mb-4"
+          data-test-id="audit-form-feedback"
         >
           {formState.feedback.message}
         </Feedback>
@@ -140,6 +141,7 @@ export function CreateAuditForm() {
             error={formState.errors.audit_order_number}
             aria-invalid={!!formState.errors.audit_order_number}
             aria-describedby={formState.errors.audit_order_number ? "audit_order_number-error" : undefined}
+            data-test-id="audit-order-number-input"
           />
         </div>
 
@@ -151,6 +153,7 @@ export function CreateAuditForm() {
             id="description"
             value={formState.description}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange("description", e.target.value)}
+            data-test-id="audit-description-input"
           />
         </div>
 
@@ -166,9 +169,10 @@ export function CreateAuditForm() {
             aria-invalid={!!formState.errors.protocol}
             aria-describedby={formState.errors.protocol ? "protocol-error" : undefined}
             className="min-h-[200px]"
+            data-test-id="audit-protocol-input"
           />
           {formState.errors.protocol && (
-            <p id="protocol-error" className="text-sm text-red-500 mt-1">
+            <p id="protocol-error" className="text-sm text-red-500 mt-1" data-test-id="protocol-error">
               {formState.errors.protocol}
             </p>
           )}
@@ -177,13 +181,18 @@ export function CreateAuditForm() {
       </div>
 
       <div className="flex justify-end space-x-4 mt-6">
-        {formState.errors.submit && <p className="text-sm text-red-500 mr-auto">{formState.errors.submit}</p>}
+        {formState.errors.submit && (
+          <p className="text-sm text-red-500 mr-auto" data-test-id="submit-error">
+            {formState.errors.submit}
+          </p>
+        )}
         <Button
           type="button"
           variant="primary"
           onClick={handleSave}
           disabled={formState.isSaving}
           className={formState.isSaving ? "opacity-70 cursor-wait" : ""}
+          data-test-id="save-audit-button"
         >
           {formState.isSaving ? (
             <span className="flex items-center">
