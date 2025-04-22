@@ -1,11 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
+import { existsSync } from "fs";
 
-// Ładujemy zmienne środowiskowe z pliku .env.test przed jakąkolwiek konfiguracją
-const envResult = dotenv.config({ path: ".env.test" });
-
-if (envResult.error) {
-  throw new Error("Failed to load .env.test file");
+// Ładujemy zmienne środowiskowe z pliku .env.test tylko w środowisku lokalnym
+if (!process.env.CI && existsSync(".env.test")) {
+  const envResult = dotenv.config({ path: ".env.test" });
+  if (envResult.error) {
+    console.warn("Failed to load .env.test file:", envResult.error);
+  }
 }
 
 export default defineConfig({
