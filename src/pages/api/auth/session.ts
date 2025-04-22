@@ -1,15 +1,16 @@
 import type { APIRoute } from "astro";
+import type { Session } from "@supabase/supabase-js";
 
 export const GET: APIRoute = async ({ locals }) => {
   try {
-    const session = await locals.auth?.validate();
+    const session = (await locals.auth?.validate()) as Session | null;
 
     return new Response(
       JSON.stringify({
         session: session
           ? {
               user: session.user,
-              expiresAt: session.expiresAt,
+              expires_at: session.expires_at,
             }
           : null,
       }),

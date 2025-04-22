@@ -10,13 +10,13 @@ interface UpdatePasswordFormProps {
 export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ onSubmit }) => {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError(undefined);
 
     if (password !== passwordConfirmation) {
       setError("Passwords do not match");

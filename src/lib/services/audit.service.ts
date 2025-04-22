@@ -1,8 +1,8 @@
-import type { supabaseClient } from "../../db/supabase.client";
+import { createSupabaseServerInstance } from "../../db/supabase.client";
 import type { ListAuditsResponseDTO, CreateAuditCommand, AuditDTO } from "../../types";
 import { AuditListError, InvalidSortingError, AuditCreationError } from "../errors/audit.errors";
 
-type SupabaseClient = typeof supabaseClient;
+type SupabaseClient = ReturnType<typeof createSupabaseServerInstance>;
 
 interface ListAuditsOptions {
   page: number;
@@ -54,11 +54,7 @@ export class AuditService {
     }
   }
 
-  async listAudits(
-    supabase: SupabaseClient,
-    userId: string,
-    options: ListAuditsOptions
-  ): Promise<ListAuditsResponseDTO> {
+  async listAudits(userId: string, options: ListAuditsOptions): Promise<ListAuditsResponseDTO> {
     try {
       console.log("[AuditService] Listing audits", { userId, options });
 
@@ -66,7 +62,7 @@ export class AuditService {
       const offset = (page - 1) * limit;
 
       // Build query
-      let query = supabase.from("audits").select("*", { count: "exact" }).eq("user_id", userId);
+      let query = this.supabase.from("audits").select("*", { count: "exact" }).eq("user_id", userId);
 
       // Apply filter if provided
       if (filter) {

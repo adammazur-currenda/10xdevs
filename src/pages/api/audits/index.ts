@@ -18,44 +18,21 @@ const queryParamsSchema = z.object({
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ request, locals }) => {
+export const GET: APIRoute = async ({ locals, url }) => {
   try {
-    const url = new URL(request.url);
-
-    // Validate query parameters
-    const queryResult = queryParamsSchema.safeParse({
-      page: url.searchParams.get("page"),
-      limit: url.searchParams.get("limit"),
-      sort: url.searchParams.get("sort"),
-      filter: url.searchParams.get("filter"),
-    });
-
-    if (!queryResult.success) {
-      console.warn("[GET /audits] Invalid query parameters", queryResult.error.issues);
-      return new Response(
-        JSON.stringify({
-          error: "Invalid query parameters",
-          details: queryResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    if (!locals.auth.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    const { page, limit, sort, filter } = queryResult.data;
-    console.log("[GET /audits] Validated parameters", { page, limit, sort, filter });
-
-    // Initialize audit service with Supabase instance from locals
     const auditService = new AuditService(locals.supabase);
-
-    // Get audits from service layer using user ID from auth
-    const response: ListAuditsResponseDTO = await auditService.listAudits(locals.supabase, locals.auth.user.id, {
-      page,
-      limit,
-      sort,
-      filter,
+    const response: ListAuditsResponseDTO = await auditService.listAudits(locals.auth.user.id, {
+      page: Number(url.searchParams.get("page")) || 1,
+      limit: Number(url.searchParams.get("limit")) || 10,
+      sort: url.searchParams.get("sort") || undefined,
+      filter: url.searchParams.get("filter") || undefined,
     });
 
     return new Response(JSON.stringify(response), {
