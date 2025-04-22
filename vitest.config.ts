@@ -28,9 +28,9 @@ export default defineConfig({
       thresholds: {
         // TODO: Przywrócić docelowe progi 80% gdy dopisane zostaną testy
         lines: 0,
-        functions: 1,
-        branches: 0,
-        statements: 1,
+        functions: 2,
+        branches: 2,
+        statements: 0,
       },
     },
   },
