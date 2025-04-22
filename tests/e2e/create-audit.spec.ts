@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect } from "@playwright/test";
 import { LoginPage } from "./pages/LoginPage";
 import { CreateAuditPage } from "./pages/CreateAuditPage";
@@ -15,6 +16,7 @@ const test = base.extend<TestFixtures>({
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
+
   createAuditPage: async ({ page }, use) => {
     await use(new CreateAuditPage(page));
   },

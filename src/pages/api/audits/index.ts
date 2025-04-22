@@ -1,20 +1,8 @@
-import { z } from "zod";
 import type { APIRoute } from "astro";
 import type { ListAuditsResponseDTO } from "../../../types";
 import { AuditService } from "../../../lib/services/audit.service";
 import { AuditListError, InvalidSortingError } from "../../../lib/errors/audit.errors";
 import { createAuditSchema } from "../../../lib/schemas/audit.schema";
-
-// Validation schema for query parameters
-const queryParamsSchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().min(1).max(100).default(10),
-  sort: z.enum(["created_at", "-created_at", "audit_order_number", "-audit_order_number"]).optional(),
-  filter: z
-    .string()
-    .nullish()
-    .transform((val) => val || undefined),
-});
 
 export const prerender = false;
 

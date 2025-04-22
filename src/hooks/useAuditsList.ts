@@ -104,6 +104,7 @@ export function useAuditsList() {
         });
         return true;
       } catch (error) {
+        console.error(error);
         setFeedback({
           message: "Failed to delete audit",
           variant: "error",

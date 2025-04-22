@@ -45,7 +45,7 @@ export const ResetPasswordForm: React.FC = () => {
       <div className="text-center">
         <h3 className="text-lg font-medium text-gray-900">Check your email</h3>
         <p className="mt-2 text-sm text-gray-600">
-          We've sent you a link to reset your password. Please check your inbox and follow the instructions.
+          We&apos;ve sent you a link to reset your password. Please check your inbox and follow the instructions.
         </p>
         <Button type="button" className="mt-4" onClick={() => (window.location.href = "/auth/login")}>
           Return to login

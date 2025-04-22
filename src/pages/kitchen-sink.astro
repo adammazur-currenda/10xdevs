@@ -1,15 +1,15 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Typography from '../components/Typography';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Card from '../components/Card';
-import List from '../components/List';
-import Feedback from '../components/Feedback';
-import Navigation from '../components/Navigation';
-import ModalDemo from '../components/ModalDemo';
-import Textarea from '../components/Textarea';
-import Table from '../components/Table';
+import Layout from "../layouts/Layout.astro";
+import Typography from "../components/Typography";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import Card from "../components/Card";
+import List from "../components/List";
+import Feedback from "../components/Feedback";
+import Navigation from "../components/Navigation";
+import ModalDemo from "../components/ModalDemo";
+import Textarea from "../components/Textarea";
+import Table from "../components/Table";
 ---
 
 <Layout title="Kitchen Sink Demo">
@@ -35,30 +35,24 @@ import Table from '../components/Table';
 
     <section>
       <Typography variant="h2">Card</Typography>
-      <Card client:load
-        header="Card Header"
-        footer="Card Footer"
-      >
+      <Card client:load header="Card Header" footer="Card Footer">
         <p>This is some card content.</p>
       </Card>
     </section>
 
     <section>
       <Typography variant="h2">List</Typography>
-      <List client:load items={[
-        'First item in the list',
-        'Second item in the list',
-        'Third item in the list'
-      ]} />
+      <List client:load items={["First item in the list", "Second item in the list", "Third item in the list"]} />
     </section>
 
     <section>
       <Typography variant="h2">Navigation</Typography>
-      <Navigation client:load
+      <Navigation
+        client:load
         items={[
-          { label: 'Home', href: '/', active: true },
-          { label: 'About', href: '/about' },
-          { label: 'Contact', href: '/contact' }
+          { label: "Home", href: "/", active: true },
+          { label: "About", href: "/about" },
+          { label: "Contact", href: "/contact" },
         ]}
       />
     </section>
@@ -70,12 +64,13 @@ import Table from '../components/Table';
 
     <section>
       <Typography variant="h2">Table</Typography>
-      <Table client:load
-        columns={['Nazwa', 'Wiek', 'Email']}
+      <Table
+        client:load
+        columns={["Nazwa", "Wiek", "Email"]}
         data={[
-          ['Jan Kowalski', 35, 'jan@example.com'],
-          ['Anna Nowak', 28, 'anna@example.com'],
-          ['Piotr Zalewski', 40, 'piotr@example.com']
+          ["Jan Kowalski", 35, "jan@example.com"],
+          ["Anna Nowak", 28, "anna@example.com"],
+          ["Piotr Zalewski", 40, "piotr@example.com"],
         ]}
       />
     </section>
@@ -86,15 +81,9 @@ import Table from '../components/Table';
         <Feedback client:load variant="success" dismissible={true}>
           This is a success message that can be dismissed
         </Feedback>
-        <Feedback client:load variant="error">
-          This is an error message
-        </Feedback>
-        <Feedback client:load variant="warning">
-          This is a warning message
-        </Feedback>
-        <Feedback client:load variant="info">
-          This is an info message
-        </Feedback>
+        <Feedback client:load variant="error"> This is an error message </Feedback>
+        <Feedback client:load variant="warning"> This is a warning message </Feedback>
+        <Feedback client:load variant="info"> This is an info message </Feedback>
       </div>
     </section>
 
@@ -103,4 +92,4 @@ import Table from '../components/Table';
       <ModalDemo client:load />
     </section>
   </main>
-</Layout> 
+</Layout>

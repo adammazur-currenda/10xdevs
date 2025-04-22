@@ -9,7 +9,8 @@ const Button = ({ onClick, children }: { onClick: () => void; children: React.Re
 
 describe("Button Component", () => {
   it("renders correctly", () => {
-    render(<Button onClick={() => {}}>Click me</Button>);
+    const mockFn = vi.fn();
+    render(<Button onClick={mockFn}>Click me</Button>);
 
     expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
   });

@@ -30,7 +30,9 @@ const Textarea: React.FC<TextareaProps> = ({ error, ...props }) => {
       className={finalClasses}
       onInput={(e) => {
         adjustHeight();
-        props.onInput && props.onInput(e);
+        if (props.onInput) {
+          props.onInput(e);
+        }
       }}
     />
   );

@@ -1,15 +1,7 @@
 import "@testing-library/jest-dom";
-import { afterAll, afterEach, beforeAll, vi } from "vitest";
+import { afterAll, afterEach, beforeAll } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-
-// Setup global mocks
-// Example: vi.stubGlobal('localStorage', {
-//   getItem: vi.fn(),
-//   setItem: vi.fn(),
-//   removeItem: vi.fn(),
-//   clear: vi.fn(),
-// });
 
 // Mock Supabase client using MSW
 export const handlers = [

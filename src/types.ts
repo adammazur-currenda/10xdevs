@@ -79,6 +79,7 @@ export interface ApproveAuditCommand {
  * Command Model for deleting an audit (DELETE /audits/{id}).
  * No payload is required for this action.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DeleteAuditCommand {}
 
 /**
