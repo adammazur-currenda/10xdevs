@@ -10,6 +10,13 @@ declare global {
         user: User | null;
         validate: () => Promise<User | null>;
       };
+      runtime: {
+        env: {
+          SUPABASE_URL: string;
+          SUPABASE_KEY: string;
+          OPENROUTER_API_KEY: string;
+        };
+      };
     }
   }
 }

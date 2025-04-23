@@ -10,8 +10,21 @@ export const cookieOptions: CookieOptionsWithName = {
   sameSite: "lax",
 };
 
-export const createSupabaseServerInstance = (context: { headers: Headers; cookies: AstroCookies }) => {
-  const supabase = createServerClient<Database>(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_KEY, {
+interface SupabaseContext {
+  headers: Headers;
+  cookies: AstroCookies;
+  env?: {
+    SUPABASE_URL: string;
+    SUPABASE_KEY: string;
+    OPENROUTER_API_KEY?: string;
+  };
+}
+
+export const createSupabaseServerInstance = (context: SupabaseContext) => {
+  const supabaseUrl = context.env?.SUPABASE_URL ?? import.meta.env.SUPABASE_URL;
+  const supabaseKey = context.env?.SUPABASE_KEY ?? import.meta.env.SUPABASE_KEY;
+
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name) {
         return context.cookies.get(name)?.value;
