@@ -1,4 +1,4 @@
-import { createSupabaseServerInstance } from "../../db/supabase.client";
+import { createSupabaseServerInstance } from "../../db/supabase.server";
 import type { ListAuditsResponseDTO, CreateAuditCommand, AuditDTO } from "../../types";
 import { AuditListError, InvalidSortingError, AuditCreationError } from "../errors/audit.errors";
 
