@@ -14,6 +14,11 @@ declare global {
   }
 }
 
+declare module "astro:env/server" {
+  export const SUPABASE_URL: string;
+  export const SUPABASE_KEY: string;
+}
+
 interface ImportMetaEnv {
   readonly SUPABASE_URL: string;
   readonly SUPABASE_KEY: string;
