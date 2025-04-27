@@ -1,17 +1,7 @@
 import type { AstroCookies } from "astro";
 import { createServerClient, type CookieOptionsWithName } from "@supabase/ssr";
 import type { Database } from "./database.types";
-
-if (!import.meta.env.SUPABASE_URL) {
-  throw new Error("SUPABASE_URL is not defined");
-}
-
-if (!import.meta.env.SUPABASE_KEY) {
-  throw new Error("SUPABASE_KEY is not defined");
-}
-
-const SUPABASE_URL = import.meta.env.SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.SUPABASE_KEY;
+import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
 
 export const cookieOptions: CookieOptionsWithName = {
   name: "sb-auth",
