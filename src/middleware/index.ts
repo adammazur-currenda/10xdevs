@@ -8,19 +8,9 @@ const API_PATHS = ["/api/auth/login", "/api/auth/register", "/api/auth/reset-pas
 
 export const onRequest = defineMiddleware(async ({ cookies, request, redirect, locals }, next) => {
   try {
-    // Add runtime environment to locals
-    locals.runtime = {
-      env: {
-        SUPABASE_URL: import.meta.env.SUPABASE_URL,
-        SUPABASE_KEY: import.meta.env.SUPABASE_KEY,
-        OPENROUTER_API_KEY: import.meta.env.OPENROUTER_API_KEY,
-      },
-    };
-
     const supabase = createSupabaseServerInstance({
       cookies,
       headers: request.headers,
-      env: locals.runtime.env,
     });
 
     const {
