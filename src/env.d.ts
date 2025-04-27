@@ -10,22 +10,20 @@ declare global {
         user: User | null;
         validate: () => Promise<User | null>;
       };
-      runtime: {
-        env: {
-          SUPABASE_URL: string;
-          SUPABASE_KEY: string;
-          OPENROUTER_API_KEY: string;
-        };
-      };
     }
   }
+}
+
+declare module "astro:env/server" {
+  export const SUPABASE_URL: string;
+  export const SUPABASE_KEY: string;
+  export const OPENROUTER_API_KEY: string;
 }
 
 interface ImportMetaEnv {
   readonly SUPABASE_URL: string;
   readonly SUPABASE_KEY: string;
   readonly OPENROUTER_API_KEY: string;
-  // more env variables...
 }
 
 interface ImportMeta {
