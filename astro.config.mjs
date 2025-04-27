@@ -23,6 +23,8 @@ export default defineConfig({
           : {}),
       },
     },
+    // Add environment variables to be available during build
+    envDir: ".",
   },
   adapter: cloudflare(),
   experimental: {
