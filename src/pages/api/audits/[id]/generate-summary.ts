@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { OpenRouterService, type Message } from "@/lib/openrouter.service";
+import { OPENROUTER_API_KEY } from "astro:env/server";
 
 interface OpenRouterResponseContent {
   summary: string;
@@ -18,7 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const apiKey = import.meta.env.OPENROUTER_API_KEY;
+    const apiKey = OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error("OpenRouter API key not found in environment variables");
     }
