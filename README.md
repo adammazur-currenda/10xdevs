@@ -1,4 +1,4 @@
-# ITAuditor (MVP)
+# ITAuditor (MVP) - it-auditor-10xdevs.pl
 
 ## Project Description
 
